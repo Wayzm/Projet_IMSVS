@@ -203,7 +203,7 @@ while(t < 100)
     {
       if(Health[i, j] != 0)
       {
-        out = Consumption(i, j, Food, Food_Value, Type, Health)
+        out = Comsumption(i, j, Food, Food_Value, Type, Health)
         Food_Value = out$Value
         Health = out$H
       }
