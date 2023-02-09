@@ -1,0 +1,139 @@
+---
+title: "ASD Project"
+output: html_notebook
+---
+
+First we will implement the algorithms described in the paper : "A cellular automaton model to find the risk of developing autism through
+gut-mediated effects" by K. Nagaraju, K.S. Sudeep, M.P. Kurhekar 
+
+```{r}
+# Function to adjust when Lysozyme are added
+# This function simulates the fact that adding lysozyme regulates C types bacteries
+# n_id : id of a bacteria
+# coords : a 2 * n_total matrix storing the X and Y coordinates of the cells
+# Type : the grid with all cells' type stored
+# IThreshold : threshold of health score at which cell death occurs
+# Health : the grid with all cells' health value
+Adjust_lysozyme<-function(n_id, coords, Type, IThreshold, Health)
+{
+
+    x = coords[1][n_id]
+    y = coords[2][n_id]
+    typeb <- tab[x][y]
+    if(Health[x][y] > IThreshold  & Type[x][y] == "C"){ Health[x][y] = Health[x][y] - 2} 
+  return(list(field = Type, H = Health))
+}
+```
+
+```{r}
+# Consumption of nutrient from neighboring cells
+# Food : the grid with all the food type
+# Food_Value : the grid with all the food value
+# n_id : id of a bacteria
+# coords : a 2 * n_total matrix storing the X and Y coordinates of the cells
+# Type : the grid with all cells' type stored
+# Health : the grid with all cells' health value
+Comsumption<-function(n_bacts, coords, Food, Food_Value, Type, Health)
+{
+
+    x = coords[1][n_id]
+    y = coords[2][n_id]
+    r = 0
+    for(j in x-1:x+1)
+    {
+      for(k in y-1:y+1)
+      {
+        # Ok here there's an issue since we could check the type before the for loops
+        if(Type[x][y] == "B" || Type[x][y] == "C")
+        {
+          if(Food[j][k] == "G" || Food[j][k] == "F" || Food[j][k] == "L")
+          {
+            if(Food_Value[j][k] := 0)
+            {
+              Food_Value[j][k] = Food_Value[j][k] - 1
+              r = r + 1
+            }
+          }
+        }
+        if(Type[x][y] == "C")
+        {
+          if(Food[j][k] == "I")
+          {
+            if(Food_Value[j][k] := 0)
+            {
+              Food_Value[j][k] = Food_Value[j][k] - 1
+              r = r + 1
+            }
+          }
+        }
+        if(Type[x][y] == "D")
+        {
+          if(Food[j][k] == "T" || Food[j][k] == "C")
+          {
+            if(Food_Value[j][k] := 0)
+            {
+              Food_Value[j][k] = Food_Value[j][k] - 1
+              r = r + 1
+            }
+          }
+        }
+        Heath[x][y] = r
+      }
+    }
+    return(list(Value = Food_Value, H = Health))
+}
+```
+```{r}
+# Division of the current cell if requirements are fulfilled
+# n_id : id of a bacteria
+# n_bacts : number of bacteria
+# coords : a 2 * n_total matrix storing the X and Y coordinates of the cells
+# Type : the grid with all cells' type stored
+# Health : the grid with all cells' health value
+Cell_Division<-function(n_id, n_bcts, coords, Type, division_probability, Health, Xmax, Ymax)
+{
+  n_bcts = n_bcts + 1
+  x = coords[1][n_id]
+  y = coords[1][n_id]
+  p = division_probability
+  original_health = Health[x][y] / 2
+  new_cell_health = original_health * p
+  typeb<-Type[x][y]
+  fin = 0
+  counter = 0
+  xs<-{x - 1; x; x + 1; x; x - 1; x + 1; x + 1}
+  ys<-{y; y + 1; y; y - 1; y - 1; y + 1; y + 1; y - 1}
+  c = 0
+  d = 0
+  index = 1
+  
+  while(fin < 2 & counter < 8)
+  {
+    c = xs[counter]
+    d = ys[counter]
+    # In the paper's algorithm there was an OR statement
+    # This made no sense as it allows overflow out of the grid if either c or d is good 
+    if(c >= 0 & c < Xmax & d >= 0 & d < Ymax)
+    {
+      if(Health[c][d] == 0)
+      {
+        Health[c][d] = original_health
+        Type[c][d] = typeb
+        
+        #In the paper, it was only fin = 1 which would lead to making every cell the neighborhood a new cell
+        fin = fin + 1
+      }
+    }
+    if(index < 8)
+    {
+      index = index + 1
+    } else {
+      index = 0
+    }
+    counter = counter + 1
+  }
+  
+}
+```
+
+
