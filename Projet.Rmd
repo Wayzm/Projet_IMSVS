@@ -16,8 +16,8 @@ gut-mediated effects" by K. Nagaraju, K.S. Sudeep, M.P. Kurhekar
 # Health : the grid with all cells' health value
 Adjust_lysozyme<-function(x, y, Type, IThreshold, Health)
 {
-    typeb <- Type[x][y]
-    if(Health[x][y] > IThreshold  & Type[x][y] == "C"){ Health[x][y] = Health[x][y] - 2} 
+    typeb <- Type[x, y]
+    if(Health[x][y] > IThreshold  & Type[x, y] == "C"){ Health[x, y] = Health[x, y] - 2} 
   return((H = Health))
 }
 ```
@@ -38,40 +38,40 @@ Comsumption<-function(x, y, Food, Food_Value, Type, Health)
       for(k in y-1:y+1)
       {
         # Ok here there's an issue since we could check the type before the for loops
-        if(Type[x][y] == "B" || Type[x][y] == "C")
+        if(Type[x, y] == "B" || Type[x, y] == "C")
         {
-          if(Food[j][k] == "G" || Food[j][k] == "F" || Food[j][k] == "L")
+          if(Food[j, k] == "G" || Food[j, k] == "F" || Food[j, k] == "L")
           {
-            if(Food_Value[j][k] := 0)
+            if(Food_Value[j, k] != 0)
             {
-              Food_Value[j][k] = Food_Value[j][k] - 1
+              Food_Value[j, k] = Food_Value[j, k] - 1
               r = r + 1
             }
           }
         }
-        if(Type[x][y] == "C")
+        if(Type[x, y] == "C")
         {
-          if(Food[j][k] == "I")
+          if(Food[j, k] == "I")
           {
-            if(Food_Value[j][k] := 0)
+            if(Food_Value[j, k] != 0)
             {
-              Food_Value[j][k] = Food_Value[j][k] - 1
+              Food_Value[j, k] = Food_Value[j, k] - 1
               r = r + 1
             }
           }
         }
-        if(Type[x][y] == "D")
+        if(Type[x, y] == "D")
         {
-          if(Food[j][k] == "T" || Food[j][k] == "C")
+          if(Food[j, k] == "T" || Food[j, k] == "C")
           {
-            if(Food_Value[j][k] := 0)
+            if(Food_Value[j, k] != 0)
             {
-              Food_Value[j][k] = Food_Value[j][k] - 1
+              Food_Value[j, k] = Food_Value[j, k] - 1 
               r = r + 1
             }
           }
         }
-        Heath[x][y] = r
+        Health[x, y] = r
       }
     }
     return(list(Value = Food_Value, H = Health))
@@ -88,9 +88,9 @@ Cell_Division<-function(x, y, Type, division_probability, Health, Xmax, Ymax)
 {
   n_bcts = n_bcts + 1
   p = division_probability
-  original_health = Health[x][y] / 2
+  original_health = Health[x, y] / 2
   new_cell_health = original_health * p
-  typeb<-Type[x][y]
+  typeb<-Type[x, y]
   fin = 0
   counter = 0
   xs<-{x - 1; x; x + 1; x; x - 1; x + 1; x + 1}
@@ -107,10 +107,10 @@ Cell_Division<-function(x, y, Type, division_probability, Health, Xmax, Ymax)
     # This made no sense as it allows overflow out of the grid if either c or d is good 
     if(c >= 0 & c < Xmax & d >= 0 & d < Ymax)
     {
-      if(Health[c][d] == 0)
+      if(Health[c, d] == 0)
       {
-        Health[c][d] = original_health
-        Type[c][d] = typeb
+        Health[c, d] = original_health
+        Type[c, d] = typeb
         
         #In the paper, it was only fin = 1 which would lead to making every cell the neighborhood a new cell
         fin = fin + 1
@@ -207,7 +207,7 @@ while(t < 100)
         Food_Value = out$Value
         Health = out$H
       }
-      if(Health[i, J] > DThreshold)
+      if(Health[i, j] > DThreshold)
       {
         out = Cell_Division(x, y, Type, 1.0, Health, x_max, y_max)
         Type = out$Ty
