@@ -16,24 +16,31 @@ n_bacts = 30
 # Placing  bacteria
 Init_bacteria<-function(n_bacts)
 {
-  coords <<- matrix(data = 0, ncol = n_bacts, nrow = 2)
-  Health <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
-  Type <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
-  
-  ii = sample(1:x_max, n_bacts, replace = FALSE)
-  jj = sample(1:y_max, n_bacts, replace = FALSE)
-  for (i in 1:n_bacts) {
-    x = ii[i]
-    y = jj[i]
-    coords[,i] <<- c(x,y)
+coords <<- matrix(data = 0, ncol = n_bacts, nrow = 2)
+Health <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
+Type <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
+
+iter = 1
+while(iter <= n_bacts){
+  ii = sample(1:x_max, 1, replace = TRUE)
+  jj = sample(1:y_max, 1, replace = TRUE)
+  x = ii[1]
+  y = jj[1]
+  if(Type[x, y] == 0){
+    coords[, iter] <<- c(x, y)
+    iter = iter + 1
     Health[x,y] <<- 20
     rd = runif(1)
     if(rd < 0.33)      Type[x,y] <<- 1 # 'B'
     else if(rd < 0.66) Type[x,y] <<- 2 # 'C'
     else               Type[x,y] <<- 3 # 'D'
+    
   }
 }
-
+}
+Init_bacteria(n_bacts)
+color = diag(Type[coords[1,],coords[2,]])
+plot(coords[1,],coords[2,], xlim = c(1, x_max), ylim = c(1, y_max), col=color)
 
 # Placing the food
 Placing_food<-function(n_food)
@@ -66,8 +73,8 @@ Placing_food<-function(n_food)
 
 Add_food<-function(n_food)
 {
-  xx = sample(1:x_max, n_food,replace = TRUE)
-  yy = sample(1:y_max, n_food,replace = TRUE)
+xx = sample(1:x_max, n_food,replace = FALSE)
+yy = sample(1:y_max, n_food,replace = FALSE)
   
   for(ii in 1:n_food)
   {
@@ -94,36 +101,47 @@ Add_food<-function(n_food)
 # Cell Division
 Cell_Division<-function(x, y, division_probability)
 {
-  p = division_probability
-  original_health = Health[x, y] / 2
-  new_cell_health = original_health * p
-  typeb<-Type[x, y]
-  fin = 0
-  counter = 1
-  xs <- c(x - 1, x    , x + 1, x    , x - 1, x - 1, x + 1, x + 1)
-  ys <- c(y    , y + 1, y    , y - 1, y - 1, y + 1, y + 1, y - 1)
-  
-  while(fin < 2 && counter <= 8)
+p = division_probability
+original_health = Health[x, y] / 2
+new_cell_health = original_health * p
+typeb<-Type[x, y]
+fin = 0
+counter = 1
+xs <- c(x - 1, x    , x + 1, x    , x - 1, x - 1, x + 1, x + 1)
+ys <- c(y    , y + 1, y    , y - 1, y - 1, y + 1, y + 1, y - 1)
+
+# We get the number of empty cells and their coords
+empty_cells = 0 # Nombre de cellule vide 
+cells_coords <- matrix(data = 0, ncol =  8, nrow = 2)
+
+while(counter <= 8)
+{
+  xx = xs[counter]
+  yy = ys[counter]
+  if(xx > 0 && xx <= x_max && yy > 0 && yy <= y_max)
   {
-    xx = xs[counter]
-    yy = ys[counter]
-    # In the paper's algorithm there was an OR statement
-    # This made no sense as it allows overflow out of the grid if either c or d is good 
-    if(xx > 0 && xx <= x_max && yy > 0 && yy <= y_max)
+    if(Health[xx, yy] == 0)
     {
-      if(Health[xx, yy] == 0)
-      {
-        Health[xx, yy] <<- original_health
-        Type[xx, yy] <<- typeb
-        n_bacts <<- n_bacts + 1
-        coords <<- cbind(coords, c(xx, yy))
-        
-        fin = fin + 1
-      }
+      empty_cells = empty_cells + 1
+      cells_coords[1, empty_cells] = xx
+      cells_coords[2, empty_cells] = yy
     }
-    counter = counter + 1
   }
-  # remove bacterie
+  counter = counter + 1
+}
+  if(empty_cells >= 2){
+    rd = sample(1:empty_cells, 2, replace = FALSE) # On ne veut pas 2 fois la même position du coup
+    for(idx in 1:2){
+      index = rd[idx]
+      new_cell_x = coords[1, index]
+      new_cell_y = coords[2, index]
+      Health[new_cell_x, new_cell_y] <<- original_health
+      Type[new_cell_x, new_cell_y] <<- typeb
+      n_bacts <<- n_bacts + 1
+      coords <<- cbind(coords, c(new_cell_x, new_cell_y))
+    }
+  }
+  # remove bacterie // Bah du coup non?
   Kill_bacteria(x,y)
 }
 
@@ -143,7 +161,7 @@ Comsumption<-function(x, y)
         Type[x, y] == 3 && (Food[j, k] == "T" || Food[j, k] == "C")
         ) && Food_Value[j, k] != 0
       )
-      {
+  {
         Food_Value[j, k] <<- Food_Value[j, k] - 1
         r = r + 1
         if(Food_Value[j, k] == 0)
@@ -182,7 +200,7 @@ Init_bacteria(n_bacts)
 Placing_food(x_max * y_max)
 
 
-timestamp = 20
+timestamp = 30
 for(t in 1:timestamp)
 {
   color = diag(Type[coords[1,],coords[2,]])
@@ -207,7 +225,7 @@ for(t in 1:timestamp)
         Adjust_lysozyme(i, j)
     }
   }
-  Add_food(50)
+if(t %% 10 == 0){Add_food(50)}
 }
 
 # plot
