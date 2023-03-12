@@ -13,9 +13,12 @@ IThreshold = 5
 init_health = 20
 t = 0
 lyso_time = 10
+division_factor = 0.25
 init_food_value = 5
 food_per_itt = 1
-timestamp = 40
+food_delay = 1
+lyzo_dmg = 2
+timestamp = 200
 n_bacts = 30
 
 # Placing  bacteria
@@ -56,11 +59,10 @@ Add_food<-function()
 }
 
 # Cell Division
-Cell_Division<-function(x, y, division_probability)
+Cell_Division<-function(x, y)
 {
 p = division_probability
-original_health = floor(Health[x, y] / 2)
-new_cell_health = original_health * p
+original_health = floor(Health[x, y] / 2 * division_factor)
 typeb<-Type[x, y]
 fin = 0
 counter = 1
@@ -114,10 +116,10 @@ Comsumption<-function(x, y)
   tmp <- 0
   tmp = 0
   if(x > 1 && x < x_max && y > 1 && y < y_max)
-  for(j in x-1:x+1)
-  {
-    for(k in y-1:y+1)
+    for(j in (x-1):(x+1))
     {
+      for(k in (y-1):(y+1))
+      {
       for(f in 1:6) # type food.
       {
         if(Food[j, k, f] > 0)
@@ -130,7 +132,6 @@ Comsumption<-function(x, y)
             Type[x, y] == 3 && (f >= 5)
             )
             Food[j, k, f] <<- Food[j, k, f] - 1
-            print(tmp)
             tmp = tmp + 1
         }
       }
@@ -144,7 +145,7 @@ Comsumption<-function(x, y)
 Adjust_lysozyme<-function(x, y)
 {
   if(Type[x, y] == 2){ # Bactérie C
-    Health[x, y] <<- Health[x, y] - 2
+    Health[x, y] <<- Health[x, y] - lyzo_dmg
   }
 }
 
@@ -186,7 +187,7 @@ for(t in 1:timestamp)
         Comsumption(i, j)
       
       if(Health[i, j] > DThreshold)
-        Cell_Division(i, j, 1.0)
+        Cell_Division(i, j)
       
       Health[i, j] = Health[i, j] - IThreshold
         
@@ -200,7 +201,8 @@ for(t in 1:timestamp)
     }
   }
   
-  Add_food()
+  if(t %% food_delay == 0)
+    Add_food()
   
   B = sum(Type[,] == 1)
   C = sum(Type[,] == 2)

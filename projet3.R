@@ -12,7 +12,7 @@ DThreshold = 50
 IThreshold = 5
 t = 0
 lyso_time = 10
-init_food_value = 10
+init_food_value = 20
 food_per_itt = 250
 timestamp = 40
 n_bacts = 30
@@ -153,9 +153,9 @@ Comsumption<-function(x, y)
 {
   tmp <- 0
   if(x > 1 && x < x_max && y > 1 && y < y_max)
-  for(j in x-1:x+1)
+  for(j in (x-1):(x+1))
   {
-    for(k in y-1:y+1)
+    for(k in (y-1):(y+1))
     {
       # Ok here there's an issue since we could check the type before the for loops
       if((
