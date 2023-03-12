@@ -99,7 +99,6 @@ Comsumption<-function(x, y)
 # Health : the grid with all cells' health value
 Cell_Division<-function(x, y, division_probability)
 {
-  n_bcts = n_bcts + 1
   p = division_probability
   original_health = Health[x, y] / 2
   new_cell_health = original_health * p
@@ -124,6 +123,8 @@ Cell_Division<-function(x, y, division_probability)
       {
         Health[c, d] = original_health
         Type[c, d] = typeb
+        n_bacts = n_bacts + 1
+        coords[,n_bacts] = c(c, d)
         
         #In the paper, it was only fin = 1 which would lead to making every cell the neighborhood a new cell
         fin = fin + 1
@@ -170,7 +171,7 @@ for(i in 1: y_max)
   for(j in 1:x_max)
   {
     vec = runif(1)
-    Food_Value[x, y] = 20
+    Food_Value[i, j] = 20
     if(vec[1] < 0.16)
     {
       Food[i, j] = "I"
@@ -189,8 +190,8 @@ for(i in 1: y_max)
     }
   }
 }
-timestamp = 100
-while(t < 100)
+timestamp = 2
+while(t < timestamp)
 {
   for(i in 1:x_max)
   {
@@ -209,6 +210,7 @@ while(t < 100)
         Health[i, j] = Health[i, j] - IThreshold
       } else {
         Health[i, j] = 0
+        
       }
       if(t > lyso_time){
         Adjust_lysozyme(i, j)
@@ -217,5 +219,6 @@ while(t < 100)
     }
   }
   t = t + 1
+  plot(coords[1,],coords[2,], xlim = c(1, x_max), ylim = c(1, y_max))
 }
 

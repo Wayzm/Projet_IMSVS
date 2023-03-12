@@ -82,7 +82,7 @@ Cell_Division<-function(x, y, division_probability)
     yy = ys[counter]
     # In the paper's algorithm there was an OR statement
     # This made no sense as it allows overflow out of the grid if either c or d is good 
-    if(xx >= 0 && xx < x_max && yy >= 0 && yy < y_max)
+    if(xx > 0 && xx <= x_max && yy > 0 && yy <= y_max)
     {
       if(Health[xx, yy] == 0)
       {
@@ -97,11 +97,7 @@ Cell_Division<-function(x, y, division_probability)
     counter = counter + 1
   }
   # remove bacterie
-  n_bacts <<- n_bacts - 1
-  Health[x, y] <<- 0
-  Type[x, y] <<- 0
-  index = which(coords == c(x,y))[2] / 2
-  coords <<- coords[,-index]
+  Kill_bacteria(x,y)
 }
 
 Comsumption<-function(x, y)
@@ -137,6 +133,21 @@ Adjust_lysozyme<-function(x, y)
   }
 }
 
+Kill_bacteria<-function(x,y){
+  index = 0
+  
+  a = which(coords[1,] == x)
+  b = which(coords[2,] == y)
+  index = intersect(a,b)
+  
+  if(index != 0){
+    n_bacts <<- n_bacts - 1
+    Health[x, y] <<- 0
+    Type[x, y] <<- 0
+    coords <<- coords[,-index]
+  }
+}
+
 
 Init_bacteria(n_bacts)
 Placing_food(x_max * y_max)
@@ -157,10 +168,11 @@ for(t in 1:timestamp)
       if(Health[i, j] > DThreshold)
         Cell_Division(i, j, 1.0)
       
-      if(Health[i, j] > IThreshold)
+      if(Health[i, j] > IThreshold){
         Health[i, j] = Health[i, j] - IThreshold
-      else 
-        Health[i, j] = 0
+        if(Health[i, j] <= 0)
+          Kill_bacteria(i,j)
+      }
         
       if(t > lyso_time)
         Adjust_lysozyme(i, j)
