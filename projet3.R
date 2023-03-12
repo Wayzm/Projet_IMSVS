@@ -8,7 +8,7 @@ x_max = 50
 DThreshold = 50
 IThreshold = 5
 t = 0
-lyso_time = 20
+lyso_time = 5
 
 # Make it possible to be divided by 3
 n_bacts = 30
@@ -64,6 +64,33 @@ Placing_food<-function(n_food)
   }
 }
 
+Add_food<-function(n_food)
+{
+  xx = sample(1:x_max, n_food,replace = TRUE)
+  yy = sample(1:y_max, n_food,replace = TRUE)
+  
+  for(ii in 1:n_food)
+  {
+    vec = runif(1)
+    i = xx[ii]
+    j = yy[ii]
+    Food_Value[i, j] <<- 20
+    
+    if(vec[1] < 0.16)
+      Food[i, j] <<- "I"
+    else if(vec[1] < 0.32)
+      Food[i, j] <<- "G"
+    else if(vec[1] < 0.48)
+      Food[i, j] <<- "F"
+    else if(vec[1] < 0.64)
+      Food[i, j] <<- "L"
+    else if(vec[1] < 0.80)
+      Food[i, j] <<- "T"
+    else
+      Food[i, j] <<- "C"
+  }
+}
+
 # Cell Division
 Cell_Division<-function(x, y, division_probability)
 {
@@ -76,7 +103,7 @@ Cell_Division<-function(x, y, division_probability)
   xs <- c(x - 1, x    , x + 1, x    , x - 1, x - 1, x + 1, x + 1)
   ys <- c(y    , y + 1, y    , y - 1, y - 1, y + 1, y + 1, y - 1)
   
-  while(fin < 2 & counter <= 8)
+  while(fin < 2 && counter <= 8)
   {
     xx = xs[counter]
     yy = ys[counter]
@@ -119,6 +146,8 @@ Comsumption<-function(x, y)
       {
         Food_Value[j, k] <<- Food_Value[j, k] - 1
         r = r + 1
+        if(Food_Value[j, k] == 0)
+          Food[j, k] <<- 0
       }
     }
   }
@@ -128,7 +157,7 @@ Comsumption<-function(x, y)
 
 Adjust_lysozyme<-function(x, y)
 {
-  if(Health[x, y] > IThreshold  & Type[x, y] == 2){ 
+  if(Health[x, y] > IThreshold  && Type[x, y] == 2){ 
     Health[x, y] <<- Health[x, y] - 2
   }
 }
@@ -178,7 +207,7 @@ for(t in 1:timestamp)
         Adjust_lysozyme(i, j)
     }
   }
-  
+  Add_food(50)
 }
 
 # plot
