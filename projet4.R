@@ -61,7 +61,6 @@ Add_food<-function()
 # Cell Division
 Cell_Division<-function(x, y)
 {
-p = division_probability
 original_health = floor(Health[x, y] / 2 * division_factor)
 typeb<-Type[x, y]
 fin = 0
