@@ -8,7 +8,7 @@ DThreshold = 50
 IThreshold = 5
 init_health = 20
 t = 0
-lyso_time = 10
+lyso_time = 20
 division_factor = 0.25
 init_food_value = 5
 food_per_itt = 1
@@ -212,16 +212,16 @@ for(t in 1:timestamp)
 
 ts = 1:timestamp
 
-plot(ts, c(num_bacteria[1,]), type = "o", col = 1, ylim = c(40, max(num_bacteria)))
-lines(ts, num_bacteria[2,], type = "o", col = 2)
-lines(ts, num_bacteria[3,], type = "o", col = 3)
+plot(ts, c(num_bacteria[1,]), type = "l", col = 1, ylim = c(40, max(num_bacteria)))
+lines(ts, num_bacteria[2,], type = "l", col = 2)
+lines(ts, num_bacteria[3,], type = "l", col = 3)
 abline(v=lyso_time)
-legend(legend = c("B", "C", "D"), col = 1:3, lty=1, x = "topright")
+legend(legend = c("B", "C", "D"), col = 1:3, lty=1, x = "bottomright")
 
 up = GIB>=0
 down = GIB<=0
 half = (max(ts[up]) + min(ts[down]))/2
-plot(ts, GIB, type = "o")
+plot(ts, GIB, type = "l")
 # polygon(x = c(min(ts[up]), ts[up],half),
 #         y = c(0, GIB[up],0),
 #         col = "red" )
@@ -229,5 +229,5 @@ plot(ts, GIB, type = "o")
 #         y = c(0,GIB[down],0),
 #         col = "blue" )
 lines(1:timestamp, rep(0,timestamp))
-abline(v=lyso_time)
+abline(v=lyso_time, col="red")
 
