@@ -1,5 +1,8 @@
 # ----- IMSVS ----- #
 
+# TODO : add_food : changé en +X à chaque itt pour toutes les cases
+#        verif consumption (les valeurs que prend la variable 'r')
+
 
 #This is is main body of the program 
 
