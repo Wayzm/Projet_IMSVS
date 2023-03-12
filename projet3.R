@@ -114,27 +114,27 @@ ys <- c(y    , y + 1, y    , y - 1, y - 1, y + 1, y + 1, y - 1)
 empty_cells = 0 # Nombre de cellule vide 
 cells_coords <- matrix(data = 0, ncol =  8, nrow = 2)
 
-while(counter <= 8)
-{
-  xx = xs[counter]
-  yy = ys[counter]
-  if(xx > 0 && xx <= x_max && yy > 0 && yy <= y_max)
+  while(counter <= 8)
   {
-    if(Health[xx, yy] == 0)
+    xx = xs[counter]
+    yy = ys[counter]
+    if(xx > 0 && xx <= x_max && yy > 0 && yy <= y_max)
     {
-      empty_cells = empty_cells + 1
-      cells_coords[1, empty_cells] = xx
-      cells_coords[2, empty_cells] = yy
+        if(Health[xx, yy] == 0)
+      {
+          empty_cells = empty_cells + 1
+          cells_coords[1, empty_cells] = xx
+          cells_coords[2, empty_cells] = yy
+        }
     }
+    counter = counter + 1
   }
-  counter = counter + 1
-}
   if(empty_cells >= 2){
     rd = sample(1:empty_cells, 2, replace = FALSE) # On ne veut pas 2 fois la même position du coup
     for(idx in 1:2){
       index = rd[idx]
-      new_cell_x = coords[1, index]
-      new_cell_y = coords[2, index]
+      new_cell_x = cells_coords[1, index]
+      new_cell_y = cells_coords[2, index]
       Health[new_cell_x, new_cell_y] <<- original_health
       Type[new_cell_x, new_cell_y] <<- typeb
       n_bacts <<- n_bacts + 1
