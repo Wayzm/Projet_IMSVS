@@ -19,11 +19,11 @@ food_per_itt = 1
 food_delay = 1 # refill delay
 lyzo_dmg = 2
 
-timestamp = 1000
+timestamp = 10000
 steady_state_limit = timestamp / 10 # limite phase convergence, temps à partir duquel on recup le nbr moyen de bacterie pour contruire Bs Cs Ds 
 
 color=c("#333333", "#BF75F9", "#35AEF7", "#CFCB3A")
-plotfreq = 10
+plotfreq = 50
 
 #!!!!!!!!!!!!!!!!!!!
     # TODO : note si steady-state = moyenne à la fin, comment on gere l'ajout de lysosyme vu que impacte le nb de bacterie
@@ -45,10 +45,17 @@ id = sample(1:(x_max*y_max), n_bacts, replace = FALSE)
     y = floor((id[i]-1) / y_max) + 1
     i = i + 1
     Health[x,y] <<- init_health
-    rd = runif(1)
-    if(rd < 0.33)      Type[x,y] <<- 1 # 'B'
-    else if(rd < 0.66) Type[x,y] <<- 2 # 'C'
-    else               Type[x,y] <<- 3 # 'D'
+    
+    # -> random
+    # rd = runif(1)
+    # if(rd < 0.33)      Type[x,y] <<- 1 # 'B'
+    # else if(rd < 0.66) Type[x,y] <<- 2 # 'C'
+    # else               Type[x,y] <<- 3 # 'D'
+    
+    # -> fixe
+    if(i %% 3 == 0)      Type[x,y] <<- 1 # 'B'
+    else if(i %% 3 == 1) Type[x,y] <<- 2 # 'C'
+    else                 Type[x,y] <<- 3 # 'D'
   }
 }
 
@@ -141,11 +148,11 @@ Comsumption<-function(x, y)
         if(Food[j, k, f] > 0)
         {
           if(
-            type == 1 && (f >= 2 && f <= 4)
+            type == 1 && (f >= 2 && f <= 4) # 3 food
             || 
-            type == 2 && (f <= 4)
+            type == 2 && (f <= 4)           # 4 food
             ||
-            type == 3 && (f >= 5)
+            type == 3 && (f >= 5)           # 2 food
             )
           {
             Food[j, k, f] <<- Food[j, k, f] - 1
@@ -187,7 +194,7 @@ num_bacteria[,1] = c(B,C,D)
 
 for(t in 1:timestamp)
 {
-  if(t%%plotfreq == 1){
+  if((t-1)%%plotfreq == 0){
     plot(Type, key=NULL, xlab=paste("time = ",t-1), ylab='', col=color, axis.col=NULL, axis.row=NULL)
     legend(legend = c("B", "C", "D"), col = 1:3, x = "bottomright", fill=color[2:4])
   }
