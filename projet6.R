@@ -5,27 +5,27 @@ library('plot.matrix')
 #This is is main body of the program 
 
 ## PARAM 
-y_max = 50
-x_max = 50
+y_max = 100
+x_max = 100
 DThreshold = 50
 IThreshold = 5
 init_health = 20
-n_bacts = 3
+n_bacts = 100
 
 lyso_time = 50
 division_factor = 0.5
 init_food_value = 5
 food_per_itt = 1 
-food_delay = 3 # refill delay
+food_delay = 1 # refill delay
 lyzo_dmg = 5
 
-timestamp = 500
-steady_state_limit = timestamp / 10 # limite phase convergence, temps à partir duquel on recup le nbr moyen de bacterie pour contruire Bs Cs Ds 
+timestamp = 1000
+steady_state_limit = timestamp / 5 # limite phase convergence, temps à partir duquel on recup le nbr moyen de bacterie pour contruire Bs Cs Ds 
 
 color=c("#333333", "#BF75F9", "#35AEF7", "#CFCB3A")
 plotfreq = 100
 
-set.seed(1)
+set.seed(2)
 controle_test = TRUE
 
 #!!!!!!!!!!!!!!!!!!!
@@ -50,15 +50,15 @@ id = sample(1:(x_max*y_max), n_bacts, replace = FALSE)
     Health[x,y] <<- init_health
     
     # -> random
-    # rd = runif(1)
-    # if(rd < 0.33)      Type[x,y] <<- 1 # 'B'
-    # else if(rd < 0.66) Type[x,y] <<- 2 # 'C'
-    # else               Type[x,y] <<- 3 # 'D'
+    rd = runif(1)
+    if(rd < 0.98)      Type[x,y] <<- 1 # 'B'
+    else if(rd < 0.99) Type[x,y] <<- 2 # 'C'
+    else               Type[x,y] <<- 3 # 'D'
     
     # -> fixe
-    if(i %% 3 == 0)      Type[x,y] <<- 1 # 'B'
-    else if(i %% 3 == 1) Type[x,y] <<- 2 # 'C'
-    else                 Type[x,y] <<- 3 # 'D'
+    # if(i %% 3 == 0)      Type[x,y] <<- 1 # 'B'
+    # else if(i %% 3 == 1) Type[x,y] <<- 2 # 'C'
+    # else                 Type[x,y] <<- 3 # 'D'
   }
 }
 
@@ -238,11 +238,9 @@ for(t in 1:timestamp)
 ts = 1:(timestamp+1)
 
 # steady state : (moyenne en retirant la phase de convergence)
-if (controle_test){
+if (controle_test)
   ss <- rowSums(num_bacteria[,(timestamp+1-steady_state_limit):(timestamp+1)])/steady_state_limit
-} else{
-  GIB_control = GIB
-}
+GIB_control = GIB
 Bs = ss[1]; Cs = ss[2]; Ds = ss[3]
 
 # construct GIB
@@ -269,8 +267,8 @@ polygon(c(0,ts, timestamp+1), c(0,GIB_tmp, 0),col='#22CF22')
 GIB_tmp = GIB; GIB_tmp[GIB>0] = 0
 polygon(c(0,ts,timestamp+1), c(0,GIB_tmp,0),col='#CF2222')
 grid()
-if (controle_test) 
-  lines(ts, GIB_control, type = "l", xlab = "time", col="blue")
+if (!controle_test) 
+  lines(ts, GIB_control, type = "l", xlab = "time", col="blue", lwd = 1.4)
 lines(ts, GIB, type = "l", xlab = "time")
 lines(1:timestamp, rep(0,timestamp))
 if (!controle_test) 
