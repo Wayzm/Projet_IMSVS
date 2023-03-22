@@ -6,7 +6,7 @@ library('plot.matrix')
 
 ## PARAM 
 y_max = 50
-x_max = 100
+x_max = 50
 DThreshold = 50
 IThreshold = 5
 init_health = 20
@@ -160,6 +160,8 @@ Comsumption<-function(x, y)
           {
             Food[j, k, f] <<- Food[j, k, f] - 1
             tmp = tmp + 1
+            # if(type == 1)
+            #   Food[x, y, 5] <<- Food[x, y, 5] + 1 # production Lactate par B
           }
         }
       }
