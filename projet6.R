@@ -12,7 +12,7 @@ init_food_value = 5
 n_bacts = 100
 r_bact = c(3,2,1) # ratio initial de bactéries B:C:D
 
-lyso_time = 300 # lysosyme is released at steady-state
+lyso_time = 600 # lysosyme is released at steady-state
 lyzo_dmg = 1 # zero pour desactiver
 
 cost_of_living = 5 # health penalty per iteration
@@ -21,7 +21,7 @@ division_factor = 1 # health penalty on division (%percentage)
 food_per_itt = 1 # number of food to add on each cell per iteration
 food_delay = 1 # refill food delay
 
-timestamp = 500 # duration of simulation
+timestamp = 1000 # duration of simulation
 plotfreq = 100
 set.seed(4)
 
@@ -54,7 +54,7 @@ Init_bacteria<-function(n_bacts, r_bact)
     
     if     (i <= r_bact[1]) Type[x,y] <<- 1 # 'B'
     else if(i <= r_bact[2]) Type[x,y] <<- 2 # 'C'
-    else                              Type[x,y] <<- 3 # 'D'
+    else                    Type[x,y] <<- 3 # 'D'
   }
 }
 
@@ -130,9 +130,9 @@ Comsumption<-function(x, y)
   else if(type == 2) food_taste = 1:4
   else               food_taste = 5:6
   
-  # Join edge of the grid
   xx = (x-1):(x+1)
   yy = (y-1):(y+1)
+  # Join edge of the grid
   for(i in 1:3){
     xx[i] = ((xx[i] - 1)%%x_max) + 1
     yy[i] = ((yy[i] - 1)%%y_max) + 1
@@ -145,15 +145,15 @@ Comsumption<-function(x, y)
   {
     for(k in yy)
     {
-      for(f in food_taste)
+      for(f in food_taste) # attention ordre de preference
       {
         if(Food[j, k, f] > 0)
         {
           Food[j, k, f] <<- Food[j, k, f] - 1
           eat_value = eat_value + 1
           
-          # if(type == 1)  # production Lactate par B
-          #   Food[x, y, 5] <<- Food[x, y, 5] + 1
+          if(type == 1)  # production Lactate par B
+            Food[x, y, 5] <<- Food[x, y, 5] + 1
           
           break # limite à 1 par cellule
         }
@@ -266,8 +266,6 @@ polygon(c(0,ts, timestamp+1), c(0,GIB_tmp, 0),col='#22CF22')
 GIB_tmp = GIB; GIB_tmp[GIB>0] = 0
 polygon(c(0,ts,timestamp+1), c(0,GIB_tmp,0),col='#CF2222')
 grid()
-lines(ts, GIB, type = "l", xlab = "time")
-lines(1:timestamp, rep(0,timestamp))
 if (lyzo_dmg != 0) 
   abline(v=lyso_time, col="darkorange", lty=2, lwd = 1.4)
 
