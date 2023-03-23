@@ -195,7 +195,7 @@ num_bacteria[,1] = c(B,C,D)
 for(t in 1:timestamp)
 {
   if((t-1)%%plotfreq == 0){
-    plot(Type, key=NULL, xlab=paste("time = ",t-1), ylab='', col=color, axis.col=NULL, axis.row=NULL)
+    plot(Type, key=NULL, xlab=paste("time step = ",t-1), ylab='', col=color, axis.col=NULL, axis.row=NULL)
     legend(legend = c("B", "C", "D"), col = 1:3, x = "bottomright", fill=color[2:4])
   }
   
@@ -235,7 +235,7 @@ for(t in 1:timestamp)
   
   # setup steady state bacteria number
   if(t == lyso_time){
-    ss <- rowSums(num_bacteria[,(t+1-steady_state_size):(t+1)])/steady_state_size
+    ss <- rowMeans(num_bacteria[,(t+2-steady_state_size):(t+1)])
     Bs <- ss[1]; Cs <- ss[2]; Ds <- ss[3]
   }
 } # end main loop
@@ -252,7 +252,7 @@ for(t in ts){
 
 ########
 ### plots 
-plot.default(ts, c(num_bacteria[1,]), type = "l", col = color[2], lwd = 1.4, ylim = c(40, max(num_bacteria)), xlab = "time", ylab = "Nombre de bactéries")
+plot.default(ts, c(num_bacteria[1,]), type = "l", col = color[2], lwd = 1.4, ylim = c(40, max(num_bacteria)), xlab = "time step", ylab = "Nombre de bactéries")
 lines(ts, num_bacteria[2,], type = "l", col = color[3], lwd = 1.4)
 lines(ts, num_bacteria[3,], type = "l", col = color[4], lwd = 1.4)
 if (lyzo_dmg != 0) 
@@ -260,7 +260,7 @@ if (lyzo_dmg != 0)
 grid()
 legend(legend = c("B", "C", "D"), col = color[2:4], lty=1, lwd = 2, x = "topleft", bg="transparent")
 
-plot.default(ts, GIB, type = "l", xlab = "time")
+plot.default(ts, GIB, type = "l", xlab = "time step", ylab = "GBI")
 GIB_tmp = GIB; GIB_tmp[GIB<0] = 0
 polygon(c(0,ts, timestamp+1), c(0,GIB_tmp, 0),col='#22CF22')
 GIB_tmp = GIB; GIB_tmp[GIB>0] = 0
