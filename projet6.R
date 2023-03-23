@@ -9,6 +9,7 @@ DThreshold = 50
 IThreshold = 5
 init_health = 20
 init_food_value = 5
+food_max_value = 20
 n_bacts = 100
 r_bact = c(3,2,1) # ratio initial de bactéries B:C:D
 
@@ -67,6 +68,7 @@ Placing_food<-function()
 Add_food<-function()
 {
   Food <<- Food + food_per_itt
+  Food[Food>food_max_value] <<- food_max_value # Food limit
 }
 
 # Cell Division
@@ -152,8 +154,8 @@ Comsumption<-function(x, y)
           Food[j, k, f] <<- Food[j, k, f] - 1
           eat_value = eat_value + 1
           
-          if(type == 1)  # production Lactate par B
-            Food[x, y, 5] <<- Food[x, y, 5] + 1
+          # if(type == 1)  # production Lactate par B
+          #   Food[x, y, 5] <<- Food[x, y, 5] + 1
           
           break # limite à 1 par cellule
         }
