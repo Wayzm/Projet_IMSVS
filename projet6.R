@@ -1,68 +1,62 @@
 # ----- IMSVS ----- #
-
 library('plot.matrix')
 
-#This is is main body of the program 
+## PARAMS
 
-## PARAM 
-y_max = 100
-x_max = 100
+y_max = 50
+x_max = 50
 DThreshold = 50
 IThreshold = 5
 init_health = 20
-n_bacts = 100
-
-lyso_time = 50
-division_factor = 0.5
 init_food_value = 5
-food_per_itt = 1 
-food_delay = 1 # refill delay
-lyzo_dmg = 5
+n_bacts = 100
+r_bact = c(3,2,1) # ratio initial de bactéries B:C:D
 
-timestamp = 1000
-steady_state_limit = timestamp / 5 # limite phase convergence, temps à partir duquel on recup le nbr moyen de bacterie pour contruire Bs Cs Ds 
+lyso_time = 300 # lysosyme is released at steady-state
+lyzo_dmg = 1 # zero pour desactiver
 
-color=c("#333333", "#BF75F9", "#35AEF7", "#CFCB3A")
+cost_of_living = 5 # health penalty per iteration
+division_factor = 1 # health penalty on division (%percentage)
+
+food_per_itt = 1 # number of food to add on each cell per iteration
+food_delay = 1 # refill food delay
+
+timestamp = 500 # duration of simulation
 plotfreq = 100
+set.seed(4)
 
-set.seed(2)
-controle_test = TRUE
+#autre param dans Comsumption 
+# -> lactate production by B
+# -> prevent or allow multiple feeding on same cell
 
-#!!!!!!!!!!!!!!!!!!!
-    # TODO : note si steady-state = moyenne à la fin, comment on gere l'ajout de lysosyme vu que impacte le nb de bacterie
-    # ---> on lance 2 experiences ? sans et avec lysosime, on recupere les Bs Cs Ds de la premiere
-#!!!!!!!!!!!!!!!!!!!
+steady_state_size = 50 # taille de l'intervale à moyenner pour obtenir Bs,Cs,Ds
+color=c("#333333", "#BF75F9", "#35AEF7", "#CFCB3A")
 
-## END PARAM
+##########
+# FUNCTIONS
 
 # Placing  bacteria
-Init_bacteria<-function(n_bacts)
+Init_bacteria<-function(n_bacts, r_bact)
 {
-Health <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
-Type <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
-
-id = sample(1:(x_max*y_max), n_bacts, replace = FALSE)
-
+  Health <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
+  Type <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
+  
+  id = sample(1:(x_max*y_max), n_bacts, replace = FALSE)
+  
+  # setup nombre initial de bacterie de chaque type 
+  r_bact = r_bact * n_bacts / sum(r_bact)
+  r_bact[2] = r_bact[2] + r_bact[1]
+  
   for (i in 1:n_bacts) {
     x = ((id[i]-1) %% y_max) + 1
     y = floor((id[i]-1) / y_max) + 1
-    i = i + 1
     Health[x,y] <<- init_health
     
-    # -> random
-    rd = runif(1)
-    if(rd < 0.98)      Type[x,y] <<- 1 # 'B'
-    else if(rd < 0.99) Type[x,y] <<- 2 # 'C'
-    else               Type[x,y] <<- 3 # 'D'
-    
-    # -> fixe
-    # if(i %% 3 == 0)      Type[x,y] <<- 1 # 'B'
-    # else if(i %% 3 == 1) Type[x,y] <<- 2 # 'C'
-    # else                 Type[x,y] <<- 3 # 'D'
+    if     (i <= r_bact[1]) Type[x,y] <<- 1 # 'B'
+    else if(i <= r_bact[2]) Type[x,y] <<- 2 # 'C'
+    else                              Type[x,y] <<- 3 # 'D'
   }
 }
-
-Init_bacteria(n_bacts)
 
 # Placing the food
 Placing_food<-function()
@@ -72,7 +66,7 @@ Placing_food<-function()
 
 Add_food<-function()
 {
-  Food <<- Food + array(rep(food_per_itt, x_max * y_max * 6), dim=c(x_max, y_max, 6))
+  Food <<- Food + food_per_itt
 }
 
 # Cell Division
@@ -117,7 +111,6 @@ Cell_Division<-function(x, y)
       new_cell_y = cells_coords[2, index]
       Health[new_cell_x, new_cell_y] <<- original_health
       Type[new_cell_x, new_cell_y] <<- typeb
-      n_bacts <<- n_bacts + 1
     }
   }
   
@@ -132,42 +125,42 @@ Comsumption<-function(x, y)
   # 1 2 3 4 5 6
   
   type <- Type[x, y]
+  # setup des goûts de la bactéries
+  if     (type == 1) food_taste = 2:4
+  else if(type == 2) food_taste = 1:4
+  else               food_taste = 5:6
   
-  tmp <- 0
-  total = 0
-  for(j in (x-1):(x+1))
+  # Join edge of the grid
+  xx = (x-1):(x+1)
+  yy = (y-1):(y+1)
+  for(i in 1:3){
+    xx[i] = ((xx[i] - 1)%%x_max) + 1
+    yy[i] = ((yy[i] - 1)%%y_max) + 1
+  }
+  
+  eat_value <- 0
+  
+  # loop over neighboring cells
+  for(j in xx)
   {
-    for(k in (y-1):(y+1))
+    for(k in yy)
     {
-      # Join edge of the grid
-      if(j < 1 || j > x_max)
-        j = ((j - 1)%%x_max) + 1
-      if(k < 1 || k > y_max)
-        k = ((k - 1)%%y_max) + 1
-      
-      for(f in 1:6) # type food.
+      for(f in food_taste)
       {
-        total = total + 1
         if(Food[j, k, f] > 0)
         {
-          if(
-            (type == 1 && (f >= 2 && f <= 4)) # 3 food
-            || 
-            (type == 2 && (f <= 4))           # 4 food
-            ||
-            (type == 3 && (f >= 5))           # 2 food
-            )
-          {
-            Food[j, k, f] <<- Food[j, k, f] - 1
-            tmp = tmp + 1
-            # if(type == 1)
-            #   Food[x, y, 5] <<- Food[x, y, 5] + 1 # production Lactate par B
-          }
+          Food[j, k, f] <<- Food[j, k, f] - 1
+          eat_value = eat_value + 1
+          
+          # if(type == 1)  # production Lactate par B
+          #   Food[x, y, 5] <<- Food[x, y, 5] + 1
+          
+          break # limite à 1 par cellule
         }
       }
     }
   }
-  Health[x, y] <<- Health[x, y] + tmp
+  Health[x, y] <<- Health[x, y] + eat_value
 }
 
 
@@ -183,9 +176,11 @@ Kill_bacteria<-function(x,y){
   Type[x, y] <<- 0
 }
 
-Init_bacteria(n_bacts)
-Placing_food()
+##################
+## MAIN
 
+Init_bacteria(n_bacts, r_bact)
+Placing_food()
 
 GIB = rep(NA, times=(timestamp+1))
 num_bacteria = matrix(data = 0, ncol = (timestamp+1), nrow = 3)
@@ -203,25 +198,29 @@ for(t in 1:timestamp)
     plot(Type, key=NULL, xlab=paste("time = ",t-1), ylab='', col=color, axis.col=NULL, axis.row=NULL)
     legend(legend = c("B", "C", "D"), col = 1:3, x = "bottomright", fill=color[2:4])
   }
-
-  for(i in sample(1:x_max))
+  
+  # for(i in sample(1:x_max))
+  for(i in (1:x_max))
   {
-    for(j in sample(1:y_max))
+    # for(j in sample(1:y_max))
+    for(j in (1:y_max))
     {
       if(Health[i, j] != 0)
         Comsumption(i, j)
       
-      if(Health[i, j] > DThreshold)
+      if(Health[i, j] >= DThreshold)
         Cell_Division(i, j)
       
-      Health[i, j] = Health[i, j] - IThreshold
-        
-      if(t > lyso_time && !controle_test)
+      if(t > lyso_time)
         Adjust_lysozyme(i, j)
       
-      if(Type[i, j] != 0 && Health[i, j] <= 0)
-        Kill_bacteria(i,j)
-      if(Health[i, j] <= 0)
+      if(Type[i, j] != 0){
+        if(Health[i, j] > IThreshold)
+          Health[i, j] = Health[i, j] - cost_of_living
+        else
+          Kill_bacteria(i,j)
+        }
+      if(Health[i, j] < 0)
         Health[i, j] <- 0
     }
   }
@@ -233,15 +232,15 @@ for(t in 1:timestamp)
   C = sum(Type[,] == 2)
   D = sum(Type[,] == 3)
   num_bacteria[,t+1] = c(B,C,D) 
-}
+  
+  # setup steady state bacteria number
+  if(t == lyso_time){
+    ss <- rowSums(num_bacteria[,(t+1-steady_state_size):(t+1)])/steady_state_size
+    Bs <- ss[1]; Cs <- ss[2]; Ds <- ss[3]
+  }
+} # end main loop
 
 ts = 1:(timestamp+1)
-
-# steady state : (moyenne en retirant la phase de convergence)
-if (controle_test)
-  ss <- rowSums(num_bacteria[,(timestamp+1-steady_state_limit):(timestamp+1)])/steady_state_limit
-GIB_control = GIB
-Bs = ss[1]; Cs = ss[2]; Ds = ss[3]
 
 # construct GIB
 for(t in ts){
@@ -250,14 +249,14 @@ for(t in ts){
   D = num_bacteria[3,t]
   GIB[t] = (B/Bs) / ((C+D)/(Cs+Ds)) - 1
 }
-  
-# plots 
+
+########
+### plots 
 plot.default(ts, c(num_bacteria[1,]), type = "l", col = color[2], lwd = 1.4, ylim = c(40, max(num_bacteria)), xlab = "time", ylab = "Nombre de bactéries")
 lines(ts, num_bacteria[2,], type = "l", col = color[3], lwd = 1.4)
 lines(ts, num_bacteria[3,], type = "l", col = color[4], lwd = 1.4)
-if (!controle_test) 
+if (lyzo_dmg != 0) 
   abline(v=lyso_time, col="darkorange", lty=2, lwd = 1.4)
-abline(v=(timestamp+1-steady_state_limit), col="darkgreen", lty=2, lwd = 1.4) # limite de la phase de convergence pour le cacule de Bs,Cs,Ds
 grid()
 legend(legend = c("B", "C", "D"), col = color[2:4], lty=1, lwd = 2, x = "topleft", bg="transparent")
 
@@ -267,10 +266,8 @@ polygon(c(0,ts, timestamp+1), c(0,GIB_tmp, 0),col='#22CF22')
 GIB_tmp = GIB; GIB_tmp[GIB>0] = 0
 polygon(c(0,ts,timestamp+1), c(0,GIB_tmp,0),col='#CF2222')
 grid()
-if (!controle_test) 
-  lines(ts, GIB_control, type = "l", xlab = "time", col="blue", lwd = 1.4)
 lines(ts, GIB, type = "l", xlab = "time")
 lines(1:timestamp, rep(0,timestamp))
-if (!controle_test) 
+if (lyzo_dmg != 0) 
   abline(v=lyso_time, col="darkorange", lty=2, lwd = 1.4)
 
