@@ -8,23 +8,23 @@ x_max = 50
 DThreshold = 50
 IThreshold = 5
 init_health = 20
-init_food_value = 5
-food_max_value = 20
+init_food_value = 3
+food_max_value = 10
 n_bacts = 100
-r_bact = c(3,2,1) # ratio initial de bactéries B:C:D
+r_bact = c(1,1,1) # ratio initial de bactéries B:C:D
 
-lyso_time = 600 # lysosyme is released at steady-state
-lyzo_dmg = 1 # zero pour desactiver
+lyso_time = 1000 # lysosyme is released at steady-state
+lyso_dmg = 1 # zero pour desactiver
 
-cost_of_living = 5 # health penalty per iteration
-division_factor = 1 # health penalty on division (%percentage)
+cost_of_living = IThreshold # health penalty per iteration
+division_factor = 0.5 # health penalty on division (%percentage)
 
 food_per_itt = 1 # number of food to add on each cell per iteration
 food_delay = 1 # refill food delay
 
-timestamp = 1000 # duration of simulation
+timestamp = 2000 # duration of simulation
 plotfreq = 100
-set.seed(4)
+set.seed(1)
 
 #autre param dans Comsumption 
 # -> lactate production by B
@@ -42,12 +42,14 @@ Init_bacteria<-function(n_bacts, r_bact)
   Health <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
   Type <<- matrix(data = 0, ncol =  x_max, nrow = y_max)
   
+  # selection position aléatoire
   id = sample(1:(x_max*y_max), n_bacts, replace = FALSE)
   
   # setup nombre initial de bacterie de chaque type 
   r_bact = r_bact * n_bacts / sum(r_bact)
   r_bact[2] = r_bact[2] + r_bact[1]
   
+  # placement bactéries
   for (i in 1:n_bacts) {
     x = ((id[i]-1) %% y_max) + 1
     y = floor((id[i]-1) / y_max) + 1
@@ -157,7 +159,7 @@ Comsumption<-function(x, y)
           # if(type == 1)  # production Lactate par B
           #   Food[x, y, 5] <<- Food[x, y, 5] + 1
           
-          break # limite à 1 par cellule
+          break # limite à 1 nourrissage par cellule
         }
       }
     }
@@ -169,7 +171,7 @@ Comsumption<-function(x, y)
 Adjust_lysozyme<-function(x, y)
 {
   if(Type[x, y] == 2){ # Bactérie C
-    Health[x, y] <<- Health[x, y] - lyzo_dmg
+    Health[x, y] <<- Health[x, y] - lyso_dmg
   }
 }
 
@@ -181,16 +183,15 @@ Kill_bacteria<-function(x,y){
 ##################
 ## MAIN
 
+#initialisation
 Init_bacteria(n_bacts, r_bact)
 Placing_food()
 
-GIB = rep(NA, times=(timestamp+1))
+# stockage du nombre de bactérie pour le 1er timestamp
 num_bacteria = matrix(data = 0, ncol = (timestamp+1), nrow = 3)
-
 B = sum(Type[,] == 1)
 C = sum(Type[,] == 2)
 D = sum(Type[,] == 3)
-
 num_bacteria[,1] = c(B,C,D) 
 
 
@@ -245,6 +246,7 @@ for(t in 1:timestamp)
 ts = 1:(timestamp+1)
 
 # construct GIB
+GIB = rep(NA, times=(timestamp+1))
 for(t in ts){
   B = num_bacteria[1,t]
   C = num_bacteria[2,t]
@@ -257,7 +259,7 @@ for(t in ts){
 plot.default(ts, c(num_bacteria[1,]), type = "l", col = color[2], lwd = 1.4, ylim = c(40, max(num_bacteria)), xlab = "time step", ylab = "Nombre de bactéries")
 lines(ts, num_bacteria[2,], type = "l", col = color[3], lwd = 1.4)
 lines(ts, num_bacteria[3,], type = "l", col = color[4], lwd = 1.4)
-if (lyzo_dmg != 0) 
+if (lyso_dmg != 0) 
   abline(v=lyso_time, col="darkorange", lty=2, lwd = 1.4)
 grid()
 legend(legend = c("B", "C", "D"), col = color[2:4], lty=1, lwd = 2, x = "topleft", bg="transparent")
@@ -268,6 +270,6 @@ polygon(c(0,ts, timestamp+1), c(0,GIB_tmp, 0),col='#22CF22')
 GIB_tmp = GIB; GIB_tmp[GIB>0] = 0
 polygon(c(0,ts,timestamp+1), c(0,GIB_tmp,0),col='#CF2222')
 grid()
-if (lyzo_dmg != 0) 
+if (lyso_dmg != 0) 
   abline(v=lyso_time, col="darkorange", lty=2, lwd = 1.4)
 
