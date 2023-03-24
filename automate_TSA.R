@@ -6,14 +6,14 @@ library('plot.matrix')
 y_max = 50
 x_max = 50
 DThreshold = 50
-IThreshold = 5
+IThreshold = 3
 init_health = 20
 init_food_value = 3
 food_max_value = 10
 n_bacts = 100
 r_bact = c(1,1,1) # ratio initial de bactéries B:C:D
 
-lyso_time = 1000 # lysosyme is released at steady-state
+lyso_time = 100 # lysosyme is released at steady-state
 lyso_dmg = 1 # zero pour desactiver
 
 cost_of_living = IThreshold # health penalty per iteration
@@ -22,9 +22,9 @@ division_factor = 0.5 # health penalty on division (%percentage)
 food_per_itt = 1 # number of food to add on each cell per iteration
 food_delay = 1 # refill food delay
 
-timestamp = 2000 # duration of simulation
-plotfreq = 100
-set.seed(1)
+timestamp = 200 # duration of simulation
+plotfreq = 10
+# set.seed(1)
 
 #autre param dans Comsumption 
 # -> lactate production by B
